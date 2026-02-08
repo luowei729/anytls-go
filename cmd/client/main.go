@@ -12,6 +12,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/sagernet/sing/common/auth"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,6 +23,8 @@ func main() {
 	serverAddr := flag.String("s", "", "Server address or anytls:// link")
 	sni := flag.String("sni", "", "Server Name Indication")
 	password := flag.String("p", "", "Password")
+	socksUser := flag.String("socks-user", "", "SOCKS5 username (optional)")
+	socksPass := flag.String("socks-pass", "", "SOCKS5 password (optional)")
 	minIdleSession := flag.Int("m", 5, "Reserved min idle session")
 	flag.Parse()
 
@@ -56,6 +59,23 @@ func main() {
 
 	var sum = sha256.Sum256([]byte(*password))
 	passwordSha256 = sum[:]
+
+	// Create SOCKS5 authenticator if username/password provided
+	var socksAuthenticator *auth.Authenticator
+	if *socksUser != "" || *socksPass != "" {
+		if *socksUser == "" || *socksPass == "" {
+			logrus.Fatalln("Both socks-user and socks-pass must be provided if one is set")
+		}
+		user := auth.User{
+			Username: *socksUser,
+			Password: *socksPass,
+		}
+		socksAuthenticator = auth.NewAuthenticator([]auth.User{user})
+		logrus.Infoln("[Client] SOCKS5 authentication enabled for user:", *socksUser)
+	} else {
+		socksAuthenticator = nil
+		logrus.Infoln("[Client] SOCKS5 authentication disabled")
+	}
 
 	logrus.Infoln("[Client]", util.ProgramVersionName)
 	logrus.Infoln("[Client] socks5/http", *listen, "=>", *serverAddr)
@@ -92,6 +112,7 @@ func main() {
 		conn = tls.Client(conn, tlsConfig)
 		return conn, nil
 	}, *minIdleSession)
+	client.Authenticator = socksAuthenticator
 
 	for {
 		c, err := listener.Accept()

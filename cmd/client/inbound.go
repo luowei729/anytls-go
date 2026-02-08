@@ -38,7 +38,7 @@ func handleTcpConnection(ctx context.Context, c net.Conn, s *myClient) {
 
 	switch headerBytes[0] {
 	case socks4.Version, socks5.Version:
-		socks.HandleConnection0(ctx, c, reader, nil, s, metadata)
+		socks.HandleConnection(ctx, c, s.Authenticator, s, metadata)
 	default:
 		http.HandleConnection(ctx, c, reader, nil, s, metadata)
 	}

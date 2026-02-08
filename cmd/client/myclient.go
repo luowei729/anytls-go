@@ -9,6 +9,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/sagernet/sing/common/auth"
 	"github.com/sagernet/sing/common/buf"
 	M "github.com/sagernet/sing/common/metadata"
 )
@@ -16,6 +17,7 @@ import (
 type myClient struct {
 	dialOut       util.DialOutFunc
 	sessionClient *session.Client
+	Authenticator *auth.Authenticator
 }
 
 func NewMyClient(ctx context.Context, dialOut util.DialOutFunc, minIdleSession int) *myClient {
