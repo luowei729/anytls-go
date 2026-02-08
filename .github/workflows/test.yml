@@ -1,0 +1,29 @@
+name: Test and Build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build client
+        run: go build ./cmd/client
+
+      - name: Build server
+        run: go build ./cmd/server
+
+      # Run tests if any exist
+      - name: Run tests
+        run: go test ./...
